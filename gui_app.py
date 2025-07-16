@@ -1,10 +1,10 @@
-# gui_app.py
 import tkinter as tk
 from tkinter import messagebox
 import threading
 import pandas as pd
 from PIL import Image, ImageTk
 from gaze_tracker import track_gaze
+import matplotlib.pyplot as plt
 
 gaze_data = []
 
@@ -44,6 +44,60 @@ def export_data():
     df.to_csv("gaze_log.csv", index=False)
     messagebox.showinfo("Export", "Data exported to gaze_log.csv")
 
+def plot_data():
+    try:
+        df = pd.read_csv("gaze_log.csv")
+        stimuli = df["Stimulus"].unique()
+        fig, axs = plt.subplots(1, len(stimuli), figsize=(6 * len(stimuli), 5))
+        if len(stimuli) == 1:
+            axs = [axs]  # make iterable
+
+        for ax, stim in zip(axs, stimuli):
+            subset = df[df["Stimulus"] == stim]
+            state_counts = subset["Gaze State"].value_counts()
+            state_counts.plot(kind='bar', ax=ax)
+            ax.set_title(f"Gaze State Frequency: {stim}")
+            ax.set_xlabel("Gaze State")
+            ax.set_ylabel("Count")
+
+        plt.tight_layout()
+        plt.show()
+    except Exception as e:
+        messagebox.showerror("Plot Error", str(e))
+
+
+def plot_pupil_positions():
+    try:
+        df = pd.read_csv("gaze_log.csv")
+        stimuli = df["Stimulus"].unique()
+        fig, axs = plt.subplots(1, len(stimuli), figsize=(6 * len(stimuli), 5))
+        if len(stimuli) == 1:
+            axs = [axs]
+
+        for ax, stim in zip(axs, stimuli):
+            subset = df[df["Stimulus"] == stim]
+            import re
+            def extract_coords(s):
+                if pd.isna(s):
+                    return (None, None)
+                match = re.match(r"\(np\.int32\((\d+)\), np\.int32\((\d+)\)\)", s)
+                if match:
+                    return int(match.group(1)), int(match.group(2))
+                return (None, None)
+
+            left_coords = subset["Left Pupil"].apply(extract_coords)
+            left_x = [x for x, y in left_coords if x is not None]
+            left_y = [y for x, y in left_coords if y is not None]
+            ax.scatter(left_x, left_y, alpha=0.6)
+            ax.set_title(f"Left Pupil Positions: {stim}")
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+
+        plt.tight_layout()
+        plt.show()
+    except Exception as e:
+        messagebox.showerror("Plot Error", str(e))
+
 # --- GUI Setup ---
 stimuli = [
     ("neutral", "stimuli/neutral.jpg"),
@@ -69,6 +123,8 @@ canvas.pack(pady=10)
 tk.Button(root, text="Start", command=start_tracking).pack(pady=2)
 tk.Button(root, text="Stop", command=stop_tracking).pack(pady=2)
 tk.Button(root, text="Export CSV", command=export_data).pack(pady=5)
+tk.Button(root, text="Plot Data", command=plot_data).pack(pady=5)
+tk.Button(root, text="Plot Pupil Positions", command=plot_pupil_positions).pack(pady=5)
 
 root.mainloop()
 
