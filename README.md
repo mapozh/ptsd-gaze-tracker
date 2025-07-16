@@ -74,6 +74,23 @@ Timestamp,Stimulus,Gaze State,Left Pupil,Right Pupil
 ...
 ```
 
+## 📐 Pupil Size Calibration (Optional)
+
+Pupil coordinates are recorded in **pixels**, but researchers often need real-world units like **millimeters**.  
+This app includes a **manual calibration function** to assist with that.
+
+### 🔧 How it works:
+
+1. Click the **Calibrate Pupil Size** button in the GUI.
+2. The app captures a webcam image and displays it.
+3. Click **two points** on an object with a known physical distance (e.g., 10 mm apart).
+4. When prompted, enter the **real-world distance** (in mm).
+5. The app computes and saves a **pixels-per-mm scale** to a file named `calibration.txt`.
+
+✅ This calibration allows later conversion of pupil coordinates into **physical size units**,  
+which is valuable for **pupillometry**, **behavioral science**, and **psychophysiological research**.
+
+
 ---
 
 ## 🤝 Contributing

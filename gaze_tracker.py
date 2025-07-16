@@ -1,14 +1,23 @@
 # gaze_tracker.py
+
 import cv2
 import time
+import math
 from gaze_tracking import GazeTracking
 from PIL import Image
+
+def load_scale():
+    try:
+        with open("calibration.txt", "r") as f:
+            return float(f.read())
+    except:
+        return None
 
 def track_gaze(stimuli, running_flag, callback):
     gaze = GazeTracking()
     webcam = cv2.VideoCapture(0)
-
     prev_state = None
+    scale = load_scale()
 
     for label, img_path in stimuli:
         if not running_flag.is_set():
@@ -19,7 +28,7 @@ def track_gaze(stimuli, running_flag, callback):
             print(f"Could not load image: {img_path}")
             continue
 
-        # Convert to Tk-compatible Image and send to GUI
+        # Convert image to RGB for displaying in Tkinter
         rgb_img = cv2.cvtColor(frame_img, cv2.COLOR_BGR2RGB)
         pil_img = Image.fromarray(rgb_img)
         callback(("stimulus", label, pil_img))
@@ -47,10 +56,26 @@ def track_gaze(stimuli, running_flag, callback):
                 timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
                 left_pupil = gaze.pupil_left_coords()
                 right_pupil = gaze.pupil_right_coords()
-                callback([timestamp, label, current_state, left_pupil, right_pupil])
+
+                pupil_dist_mm = None
+                if left_pupil and right_pupil and scale:
+                    dx = right_pupil[0] - left_pupil[0]
+                    dy = right_pupil[1] - left_pupil[1]
+                    pixel_dist = math.sqrt(dx**2 + dy**2)
+                    pupil_dist_mm = round(pixel_dist * scale, 2)
+
+                callback([
+                    timestamp,
+                    label,
+                    current_state,
+                    left_pupil,
+                    right_pupil,
+                    pupil_dist_mm
+                ])
                 prev_state = current_state
 
     webcam.release()
+
 
 
 
