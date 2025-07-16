@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Output files
+gaze_log.csv
+
+# pip installer
+get-pip.py
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# Jupyter notebooks checkpoints (if ever used)
+.ipynb_checkpoints/
+
+# Ignore vendored/third-party libraries
+gaze_tracking/
+GazeTracking/
+
