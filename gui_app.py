@@ -42,7 +42,10 @@ def export_data():
     if not gaze_data:
         messagebox.showwarning("Export", "No data to export.")
         return
-    df = pd.DataFrame(gaze_data, columns=["Timestamp", "Stimulus", "Gaze State", "Left Pupil", "Right Pupil"])
+    df = pd.DataFrame(
+        gaze_data,
+        columns=["Timestamp", "Stimulus", "Gaze State", "Left Pupil", "Right Pupil", "Pupil Distance (mm)"]
+    )
     df.to_csv("gaze_log.csv", index=False)
     messagebox.showinfo("Export", "Data exported to gaze_log.csv")
 

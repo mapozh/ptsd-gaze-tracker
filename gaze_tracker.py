@@ -34,7 +34,7 @@ def track_gaze(stimuli, running_flag, callback):
         callback(("stimulus", label, pil_img))
 
         start_time = time.time()
-        while time.time() - start_time < 3 and running_flag.is_set():
+        while time.time() - start_time < 5 and running_flag.is_set():
             ret, frame = webcam.read()
             if not ret:
                 continue
