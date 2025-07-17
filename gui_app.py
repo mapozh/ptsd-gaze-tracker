@@ -94,60 +94,80 @@ def plot_pupil_positions():
         messagebox.showerror("Plot Error", str(e))
 
 def run_calibration():
+    import cv2
+    from tkinter import messagebox, simpledialog
+
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("[Calibration] Webcam not accessible.")
         return None
 
-    ret, frame = cap.read()
-    cap.release()
+    print("[Calibration] Press SPACE to capture image, or ESC to cancel.")
+    messagebox.showinfo(
+        "Calibration - Step 1",
+        "Live camera feed will open.\n\n"
+        "➡ Press SPACE to capture an image\n"
+        "➡ Press ESC to cancel."
+    )
 
-    if not ret:
-        print("[Calibration] Failed to capture image.")
-        return None
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            continue
+
+        cv2.imshow("Live Preview - Press SPACE to capture", frame)
+        key = cv2.waitKey(1)
+        if key == 27:  # ESC
+            print("[Calibration] Cancelled.")
+            cap.release()
+            cv2.destroyAllWindows()
+            return None
+        elif key == 32:  # SPACE
+            print("[Calibration] Image captured.")
+            break
+
+    cap.release()
+    cv2.destroyWindow("Live Preview - Press SPACE to capture")
 
     points = []
 
     def on_click(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
+        if event == cv2.EVENT_LBUTTONDOWN and len(points) < 2:
             points.append((x, y))
             cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
-            cv2.imshow("Calibration", frame)
-            if len(points) == 2:
-                dx = points[1][0] - points[0][0]
-                dy = points[1][1] - points[0][1]
-                pixel_dist = (dx ** 2 + dy ** 2) ** 0.5
-                # Defer dialog interaction until OpenCV window is gone
-                globals()["pending_mm_dist"] = pixel_dist
-                cv2.setMouseCallback("Calibration", lambda *args: None)
-                cv2.destroyWindow("Calibration")
+            cv2.imshow("Calibration - Click 2 Points", frame)
 
-    print("[Calibration] Click two points or press ESC to cancel.")
-    cv2.namedWindow("Calibration", cv2.WINDOW_NORMAL)
-    cv2.imshow("Calibration", frame)
-    cv2.setMouseCallback("Calibration", on_click)
+    messagebox.showinfo(
+        "Calibration - Step 2",
+        "Click two points on the image to measure known distance.\n\n"
+        "➡ Press ENTER when done\n"
+        "➡ Press ESC to cancel"
+    )
+
+    print("[Calibration] Click two points. Press ENTER when done, ESC to cancel.")
+    cv2.namedWindow("Calibration - Click 2 Points", cv2.WINDOW_NORMAL)
+    cv2.setMouseCallback("Calibration - Click 2 Points", on_click)
+    cv2.imshow("Calibration - Click 2 Points", frame)
 
     while True:
         key = cv2.waitKey(1)
-        try:
-            if cv2.getWindowProperty("Calibration", cv2.WND_PROP_VISIBLE) < 1:
-                break
-        except cv2.error:
-            break
         if key == 27:  # ESC
             print("[Calibration] Cancelled by user.")
-            break
-        if 'pending_mm_dist' in globals():
+            cv2.destroyAllWindows()
+            return None
+        elif key == 13 and len(points) == 2:  # ENTER
             break
 
     cv2.destroyAllWindows()
-    cv2.waitKey(1)
 
-    if 'pending_mm_dist' not in globals():
-        return None
+    dx = points[1][0] - points[0][0]
+    dy = points[1][1] - points[0][1]
+    pixel_dist = (dx ** 2 + dy ** 2) ** 0.5
 
-    pixel_dist = globals().pop("pending_mm_dist")
     return pixel_dist
+
+
+
 
 
 def handle_calibration():
@@ -194,7 +214,7 @@ tk.Button(root, text="Stop", command=stop_tracking).pack(pady=2)
 tk.Button(root, text="Export CSV", command=export_data).pack(pady=5)
 tk.Button(root, text="Plot Data", command=plot_data).pack(pady=5)
 tk.Button(root, text="Plot Pupil Positions", command=plot_pupil_positions).pack(pady=5)
-tk.Button(root, text="Calibrate Pupil Size", command=handle_calibration).pack(pady=5)
+tk.Button(root, text="Calibrate Scale (mm/pixel)", command=handle_calibration).pack(pady=5)
 
 root.mainloop()
 
