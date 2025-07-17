@@ -14,9 +14,10 @@ These measurements may help in identifying symptoms such as **threat avoidance**
 
 ## 📦 Features
 
-- ✅ Simple GUI (Tkinter-based) — just one button to start
+- ✅ Simple GUI (Tkinter-based) — user-friendly with clearly labeled controls
 - 📸 Real-time webcam tracking of gaze and pupil coordinates
 - 🧠 Gaze direction & blink detection via [GazeTracking](https://github.com/antoinelame/GazeTracking)
+- 👀 Preview camera and gaze overlay before tracking
 - 📊 Logs pupil position (left & right) and gaze state to CSV
 - 📁 Automatic CSV export after session
 - 📈 Built-in data visualization (gaze frequency & pupil scatterplots)
@@ -60,6 +61,10 @@ pip install -r requirements.txt
 
 ### 4. Run the Application
 
+Images are shown for **5 seconds each** by default. You can modify this duration in the source code if needed.
+The app uses a fixed sequence of visual stimuli (e.g., neutral, threat, happy)  
+defined in `stimuli/`. You can replace these with your own images based on your research goals or experimental condition.
+
 ```bash
 python gui_app.py
 ```
@@ -70,11 +75,18 @@ After running a session, click **Export CSV** in the GUI.
 The file will be saved as `gaze_log.csv` in your project directory, with data like:
 
 ```
-Timestamp,Stimulus,Gaze State,Left Pupil,Right Pupil
-2025-07-16 19:29:11,neutral,Looking Center,"(345, 300)","(398, 299)"
-2025-07-16 19:29:12,neutral,Looking Left,"(346, 299)","(399, 298)"
+Timestamp,Stimulus,Gaze State,Left Pupil,Right Pupil,Pupil Distance (mm)
+2025-07-16 19:29:11,neutral,Looking Center,"(345, 300)","(398, 299)",19.32
 ...
 ```
+
+### 🧹 Data Cleanup Tips (Optional)
+
+If needed, open `gaze_log.csv` in Excel or Python to:
+
+- Remove rows with "Blinking" or "Undetected" states
+- Filter based on specific stimuli or gaze directions
+- Convert coordinates into real-world metrics using your calibrated scale
 
 ## 📐 Calibration (Optional but Recommended)
 

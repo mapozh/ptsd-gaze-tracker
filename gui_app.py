@@ -70,7 +70,9 @@ def preview_gaze_tracking():
 def start_tracking():
     global tracking_thread, running_flag
     if tracking_thread and tracking_thread.is_alive():
+        messagebox.showinfo("Tracking", "Tracking is already running.")
         return
+    gaze_data.clear()  # <-- reset for new session
     running_flag.set()
     tracking_thread = threading.Thread(
         target=track_gaze,
@@ -79,6 +81,7 @@ def start_tracking():
     )
     tracking_thread.start()
 
+
 def stop_tracking():
     running_flag.clear()
 
@@ -86,12 +89,16 @@ def export_data():
     if not gaze_data:
         messagebox.showwarning("Export", "No data to export.")
         return
-    df = pd.DataFrame(
-        gaze_data,
-        columns=["Timestamp", "Stimulus", "Gaze State", "Left Pupil", "Right Pupil", "Pupil Distance (mm)"]
-    )
-    df.to_csv("gaze_log.csv", index=False)
-    messagebox.showinfo("Export", "Data exported to gaze_log.csv")
+    try:
+        df = pd.DataFrame(
+            gaze_data,
+            columns=["Timestamp", "Stimulus", "Gaze State", "Left Pupil", "Right Pupil", "Pupil Distance (mm)"]
+        )
+        df.to_csv("gaze_log.csv", index=False)
+        messagebox.showinfo("Export", "Data exported to gaze_log.csv")
+    except Exception as e:
+        messagebox.showerror("Export Error", str(e))
+
 
 def plot_data():
     try:
