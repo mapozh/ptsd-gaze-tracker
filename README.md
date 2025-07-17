@@ -5,8 +5,8 @@ This project is a simple Python-based desktop application that uses **pupillomet
 The app presents short visual stimuli (images) and tracks:
 
 - 👁️ Eye gaze direction  
-- ⏱️ Fixation duration  
-- 🎯 Pupil size changes  
+- ⏱️ Fixation state changes  
+- 📌 Pupil position (in pixels or millimeters, if calibrated)
 
 These measurements may help in identifying symptoms such as **threat avoidance**, **hypervigilance**, and **emotional arousal**.
 
@@ -14,11 +14,13 @@ These measurements may help in identifying symptoms such as **threat avoidance**
 
 ## 📦 Features
 
-- ✅ One-button start GUI (Tkinter-based)
-- 📸 Real-time webcam tracking
-- 🧠 Gaze & blink detection with [GazeTracking](https://github.com/antoinelame/GazeTracking)
-- 📊 Pupil position logging
-- 📁 Automatic CSV export at session end
+- ✅ Simple GUI (Tkinter-based) — just one button to start
+- 📸 Real-time webcam tracking of gaze and pupil coordinates
+- 🧠 Gaze direction & blink detection via [GazeTracking](https://github.com/antoinelame/GazeTracking)
+- 📊 Logs pupil position (left & right) and gaze state to CSV
+- 📁 Automatic CSV export after session
+- 📈 Built-in data visualization (gaze frequency & pupil scatterplots)
+- 📐 Manual calibration tool for converting pixels to millimeters
 
 ---
 
@@ -74,26 +76,31 @@ Timestamp,Stimulus,Gaze State,Left Pupil,Right Pupil
 ...
 ```
 
-## 📐 Pupil Size Calibration (Optional)
+## 📐 Calibration (Optional but Recommended)
 
-Pupil coordinates are recorded in **pixels**, but researchers often need real-world units like **millimeters**.  
-This app includes a **manual calibration function** to assist with that.
+Pupil coordinates and eye features are recorded in **pixels**,  
+but researchers often need measurements in **millimeters** for scientific accuracy.  
+This app provides a **manual calibration tool** to estimate the scale between real-world distances and pixel units.
 
 ### 🔧 How it works:
 
-1. Click the **Calibrate Pupil Size** button in the GUI.
-2. The app captures a webcam image and displays it.
-3. Click **two points** on an object with a known physical distance (e.g., 10 mm apart).
-4. When prompted, enter the **real-world distance** (in mm).
-5. The app computes and saves a **pixels-per-mm scale** to a file named `calibration.txt`.
+1. Click the **Calibrate** button in the GUI.
+2. A **live webcam preview** opens.
+3. Press **SPACE** to capture a still image for calibration.
+4. Click **two points** on an object of known length (e.g., marks on a ruler 10 mm apart).
+5. Press **ENTER** when done.
+6. Enter the actual **distance in mm** when prompted.
+7. The app computes and stores the **pixels-per-mm ratio** to `calibration.txt`.
 
-✅ This calibration allows later conversion of pupil coordinates into **physical size units**,  
-which is valuable for **pupillometry**, **behavioral science**, and **psychophysiological research**.
+✅ Once calibrated, the app can later convert pixel-based pupil coordinates  
+into **millimeter units** — useful for **pupillometry**, **clinical screening**, or **experimental psychology**.
+
+> 🧠 Tip: For best results, use a small physical ruler or caliper in front of the camera during calibration.
 
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Here's how to get started:
 
