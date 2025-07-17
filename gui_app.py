@@ -6,9 +6,11 @@ import threading
 import pandas as pd
 from PIL import Image, ImageTk
 from gaze_tracker import track_gaze
+from gaze_tracking import GazeTracking
 import matplotlib.pyplot as plt
 import cv2
 import re
+import time
 
 gaze_data = []
 
@@ -22,6 +24,48 @@ def ui_callback(data):
     else:
         gaze_data.append(data)
         gaze_var.set(f"Gaze: {data[2]}")
+
+
+
+
+def preview_gaze_tracking():
+    gaze = GazeTracking()
+    webcam = cv2.VideoCapture(0)
+
+    if not webcam.isOpened():
+        messagebox.showerror("Preview", "Webcam not accessible.")
+        return
+
+    cv2.namedWindow("Preview - Gaze Tracking", cv2.WINDOW_NORMAL)
+    print("[Preview] Press ESC or close the window to exit preview.")
+
+    while True:
+        ret, frame = webcam.read()
+        if not ret:
+            continue
+
+        gaze.refresh(frame)
+        annotated_frame = gaze.annotated_frame()
+        cv2.imshow("Preview - Gaze Tracking", annotated_frame)
+
+        key = cv2.waitKey(1)
+        if key == 27:  # ESC pressed
+            break
+
+        # Check if the window was manually closed
+        try:
+            if cv2.getWindowProperty("Preview - Gaze Tracking", cv2.WND_PROP_VISIBLE) < 1:
+                break
+        except cv2.error:
+            break
+
+    # Clean up
+    webcam.release()
+    time.sleep(0.1)
+    cv2.destroyAllWindows()
+    time.sleep(0.1)
+
+
 
 def start_tracking():
     global tracking_thread, running_flag
@@ -212,6 +256,7 @@ tk.Label(root, textvariable=gaze_var, font=("Arial", 14)).pack(pady=5)
 canvas = tk.Canvas(root, width=640, height=360, bg="gray")
 canvas.pack(pady=10)
 
+tk.Button(root, text="Preview Gaze Tracking", command=preview_gaze_tracking).pack(pady=5)
 tk.Button(root, text="Start", command=start_tracking).pack(pady=2)
 tk.Button(root, text="Stop", command=stop_tracking).pack(pady=2)
 tk.Button(root, text="Export CSV", command=export_data).pack(pady=5)
