@@ -1,3 +1,5 @@
+#gui_app.py
+
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 import threading
@@ -94,15 +96,15 @@ def plot_pupil_positions():
 def run_calibration():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        messagebox.showerror("Calibration", "Webcam not accessible.")
-        return
+        print("[Calibration] Webcam not accessible.")
+        return None
 
     ret, frame = cap.read()
     cap.release()
 
     if not ret:
-        messagebox.showerror("Calibration", "Failed to capture image from webcam.")
-        return
+        print("[Calibration] Failed to capture image.")
+        return None
 
     points = []
 
@@ -115,23 +117,54 @@ def run_calibration():
                 dx = points[1][0] - points[0][0]
                 dy = points[1][1] - points[0][1]
                 pixel_dist = (dx ** 2 + dy ** 2) ** 0.5
+                # Defer dialog interaction until OpenCV window is gone
+                globals()["pending_mm_dist"] = pixel_dist
+                cv2.setMouseCallback("Calibration", lambda *args: None)
                 cv2.destroyWindow("Calibration")
-                cv2.waitKey(1)  # Prevent segfault
-                mm_dist = simpledialog.askfloat("Input", "Enter real-world distance in mm between the two points:")
-                if mm_dist and mm_dist > 0:
-                    scale = mm_dist / pixel_dist
-                    with open("calibration.txt", "w") as f:
-                        f.write(f"{scale}")
-                    messagebox.showinfo("Calibration", f"Saved scale: {scale:.4f} mm/pixel")
-                    print(f"[Calibration] Saved scale: {scale:.4f} mm/pixel")
 
-    messagebox.showinfo("Calibration", "Click two points on the image to measure a known real-world distance.")
+    print("[Calibration] Click two points or press ESC to cancel.")
     cv2.namedWindow("Calibration", cv2.WINDOW_NORMAL)
     cv2.imshow("Calibration", frame)
     cv2.setMouseCallback("Calibration", on_click)
-    cv2.waitKey(0)
+
+    while True:
+        key = cv2.waitKey(1)
+        try:
+            if cv2.getWindowProperty("Calibration", cv2.WND_PROP_VISIBLE) < 1:
+                break
+        except cv2.error:
+            break
+        if key == 27:  # ESC
+            print("[Calibration] Cancelled by user.")
+            break
+        if 'pending_mm_dist' in globals():
+            break
+
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+
+    if 'pending_mm_dist' not in globals():
+        return None
+
+    pixel_dist = globals().pop("pending_mm_dist")
+    return pixel_dist
+
+
+def handle_calibration():
+    pixel_dist = run_calibration()
+    if pixel_dist:
+        mm_dist = simpledialog.askfloat("Input", "Enter real-world distance in mm between the two points:")
+        if mm_dist and mm_dist > 0:
+            scale = mm_dist / pixel_dist
+            with open("calibration.txt", "w") as f:
+                f.write(f"{scale}")
+            print(f"[Calibration] Saved scale: {scale:.4f} mm/pixel")
+            messagebox.showinfo("Calibration", f"Saved scale: {scale:.4f} mm/pixel")
+        else:
+            print("[Calibration] Invalid or cancelled mm input.")
+    else:
+        print("[Calibration] No pixel distance measured.")
+
 
 
 # --- GUI Setup ---
@@ -161,7 +194,7 @@ tk.Button(root, text="Stop", command=stop_tracking).pack(pady=2)
 tk.Button(root, text="Export CSV", command=export_data).pack(pady=5)
 tk.Button(root, text="Plot Data", command=plot_data).pack(pady=5)
 tk.Button(root, text="Plot Pupil Positions", command=plot_pupil_positions).pack(pady=5)
-tk.Button(root, text="Calibrate Pupil Size", command=run_calibration).pack(pady=5)
+tk.Button(root, text="Calibrate Pupil Size", command=handle_calibration).pack(pady=5)
 
 root.mainloop()
 
